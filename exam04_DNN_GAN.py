@@ -1,4 +1,3 @@
-import os
 import matplotlib.pyplot as plt
 import numpy as np
 from keras.models import *
@@ -27,7 +26,9 @@ generator.add(Dense(784, activation='tanh'))  # 하이퍼볼릭 탄젠트: 마�
 generator.add(Reshape(img_shape))
 generator.summary()
 
+
 lrelu = LeakyReLU(alpha=0.01) # 디폴트 값 : 0.3
+
 discriminator = Sequential()
 discriminator.add(Flatten(input_shape=img_shape))
 discriminator.add(Dense(128, activation=lrelu))
@@ -35,6 +36,7 @@ discriminator.add(Dense(1, activation='sigmoid'))
 discriminator.summary()
 discriminator.compile(loss='binary_crossentropy', optimizer='adam',
                       metrics=['accuracy'])
+discriminator.trainable = False
 
 gan_model = Sequential()
 gan_model.add(generator)
@@ -46,6 +48,7 @@ real = np.ones((batch_size, 1))     # np.ones : 1로 채워진 행렬로 만들�
 print(real)
 fake = np.zeros((batch_size, 1))
 print(fake)
+
 
 for epoch in range(epochs):
     idx = np.random.randint(0, x_train.shape[0], batch_size)    # 0-59999 랜덤으로 뽑아냄
@@ -59,14 +62,13 @@ for epoch in range(epochs):
 
     d_loss, d_acc = np.add(d_hist_fake, d_hist_real) * 0.5  # 평균을 구함
 
-    discriminator.trainable = False
-
-    z = np.random.normal(0, 1, (batch_size, noise))
-    gan_hist = gan_model.train_on_batch(z, real) # 1이라고 답하게 학습
+    if epoch % 2 == 0:
+        z = np.random.normal(0, 1, (batch_size, noise))
+        gan_hist = gan_model.train_on_batch(z, real)    # 1이라고 답하게 학습
 
     if epoch % sample_interval ==0:
         print('%d, [D loss: %f, acc.: %.2f%%], [G loss: %f]'%(
-            epoch, d_loss, d_loss, gan_hist))
+                epoch, d_loss, d_loss, gan_hist))
         row = col = 4
         z = np.random.normal(0, 1 ,(row*col, noise))
         fake_imgs = generator.predict(z)

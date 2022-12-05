@@ -91,6 +91,3 @@ plt.plot(fit_hist.history['val_loss'])
 plt.show()
 
 
-
-
-
