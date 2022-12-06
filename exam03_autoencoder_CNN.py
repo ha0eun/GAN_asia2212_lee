@@ -13,7 +13,7 @@ x = MaxPool2D((2, 2), padding='same')(x)
 x = Conv2D(8,(3, 3), activation='relu', padding='same')(x)
 encoded = MaxPool2D((2, 2), padding='same')(x)  # 4 * 4
 
-x = Conv2D(8, (3, 3), activation='relu', padding='same')(encoded)
+x = Conv2D(8, (3, 3), activation='relu', padding='same')(encoded)   # 특성을 지닌 이미지를 만들어보려고 간모델 생성
 x = UpSampling2D((2, 2))(x) # 오버 샘플링 - 8 * 8
 x = Conv2D(8, (3, 3), activation='relu', padding='same')(x)
 x = UpSampling2D((2, 2))(x)  # 16 * 16

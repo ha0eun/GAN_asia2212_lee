@@ -29,7 +29,7 @@ generator.summary()
 
 lrelu = LeakyReLU(alpha=0.01) # 디폴트 값 : 0.3
 
-discriminator = Sequential()
+discriminator = Sequential()        # discriminator : 이진분류기
 discriminator.add(Flatten(input_shape=img_shape))
 discriminator.add(Dense(128, activation=lrelu))
 discriminator.add(Dense(1, activation='sigmoid'))
@@ -52,21 +52,24 @@ print(fake)
 
 for epoch in range(epochs):
     idx = np.random.randint(0, x_train.shape[0], batch_size)    # 0-59999 랜덤으로 뽑아냄
-    real_imgs = x_train[idx]
+    real_imgs = x_train[idx]    # 랜덤하게 이미지 뽑음
 
     z = np.random.normal(0, 1, (batch_size, noise))
-    fake_imgs = generator.predict(z)
+    fake_imgs = generator.predict(z)    # 페이크 이미지를 배치사이즈 만큼 만듦
 
-    d_hist_real = discriminator.train_on_batch(real_imgs, real)    # train_on_batch: 1회만 하고 그만둠
-    d_hist_fake = discriminator.train_on_batch(fake_imgs, fake)
+    d_hist_real = discriminator.train_on_batch(real_imgs, real)     # train_on_batch: 에폭 전체토탈 1회만 하고 그만둠/ 민맥에서 학습된 것을 리얼이미지로 받아들임
+    d_hist_fake = discriminator.train_on_batch(fake_imgs, fake)     # 페이크 이미지를 주고 학습시킴, 라벨은 페이크. 디스에서 만든 것을 페이크 이미지로 받아들임
 
     d_loss, d_acc = np.add(d_hist_fake, d_hist_real) * 0.5  # 평균을 구함
 
-    if epoch % 2 == 0:
-        z = np.random.normal(0, 1, (batch_size, noise))
-        gan_hist = gan_model.train_on_batch(z, real)    # 1이라고 답하게 학습
 
-    if epoch % sample_interval ==0:
+    if epoch % 2 == 0:  # 짝수일때/ 제너는 학습이 잘됨=> 그래서 디스보다 절반만 학습시키려고 짝수번에 학습되도록
+        z = np.random.normal(0, 1, (batch_size, noise))     # batch_size 10만
+        gan_hist = gan_model.train_on_batch(z, real)    # 1이라고 답하게 학습/ 이미지를 간모델에 있는
+    # 위에 코드는 학습시킬때 필요한 코드
+
+    # 밑에 코드는 이미지 저장할때 필요하지 학습시키는 것과는 관계가 없음
+    if epoch % sample_interval ==0:     # 샘플 이미지 만들어서 저장하는 코드/ 100에폭당 한번씩 이미지 저장
         print('%d, [D loss: %f, acc.: %.2f%%], [G loss: %f]'%(
                 epoch, d_loss, d_loss, gan_hist))
         row = col = 4
@@ -74,19 +77,14 @@ for epoch in range(epochs):
         fake_imgs = generator.predict(z)
         fake_imgs = 0.5 * fake_imgs + 0.5
 
-        _, axs = plt.subplots(row, col, figsize=(5, 5),sharey =True, sharex=True)
+        _, axs = plt.subplots(row, col, figsize=(5, 5),sharey =True, sharex=True)   # x와 y축을 공유한다/ 스케일 사이즈가 같아진다.
         cont = 0
         for i in range(row):
             for j in range(col):
-                axs[i, j].imshow(fake_imgs[cont, :, :, 0], cmap='gray')
-                axs[i, j].axis('off')
+                axs[i, j].imshow(fake_imgs[cont, :, :, 0], cmap='gray') # 회색으로 그리기
+                axs[i, j].axis('off')   # 가로축 세로축 없앤다 off
                 cont += 1
         path = os.path.join(OUT_DIR, 'img-{}'.format(epoch + 1))
-        plt.savefig(path)
+        plt.savefig(path)    # 저장
         plt.close()
-
-
-
-
-
 
